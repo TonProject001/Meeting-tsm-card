@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แสดงข้อมูล Meeting</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            background-color: white;
+        }
+        th, td {
+            padding: 12px;
+            text-align: center; /* จัดกึ่งกลาง */
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #4CAF50; /* สีพื้นหลังของหัวตาราง */
+            color: white; /* สีข้อความในหัวตาราง */
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9; /* สีพื้นหลังสลับสำหรับแถวคู่ */
+        }
+        tr:hover {
+            background-color: #f1f1f1; /* เปลี่ยนสีเมื่อเมาส์ไปวางบนแถว */
+        }
+    </style>
+</head>
+<body>
+    <h1>แสดงข้อมูล Meeting</h1>
+    <table id="data-table">
+        <thead>
+            <tr>
+                <th>ชื่อ</th>
+                <th>ตำแหน่ง</th>
+                <th>กลุ่มงาน</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- ข้อมูลจะถูกเพิ่มที่นี่โดย JavaScript -->
+        </tbody>
+    </table>
+    <script>
+        async function fetchData() {
+            const sheetId = '1Y8GV0_i3MmL_QKhoY8OscTvc8YUzdB-31KUiwGOXb5s'; // แทนที่ด้วย Sheet ID ของคุณ
+            const sheetName = 'รายชื่อผู้เข้าประชุม'; // แทนที่ด้วยชื่อ Sheet ของคุณ
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
+            const response = await fetch(url);
+            const data = await response.text();
+            const rows = data.split('\n').slice(1); // เอา header ออก
+            const tableBody = document.querySelector('#data-table tbody');
+            tableBody.innerHTML = ''; // ล้างข้อมูลเก่า
+            rows.forEach((row) => {
+                const columns = row.split(',').map(column => column.replace(/"/g, '')); // ลบเครื่องหมาย "
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${columns[1] || ''}</td> <!-- คอลัมน์ B: Name -->
+                    <td>${columns[2] || ''}</td> <!-- คอลัมน์ C: ตำแหน่ง -->
+                    <td>${columns[3] || ''}</td> <!-- คอลัมน์ D: กลุ่มงาน -->
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+        // อัปเดตข้อมูลทุก 5 นาที
+        setInterval(fetchData, 3000);
+        // ดึงข้อมูลครั้งแรกเมื่อโหลดหน้า
+        fetchData();
+    </script>
+</body>
+</html>
