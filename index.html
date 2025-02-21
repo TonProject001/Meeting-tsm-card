@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ผู้เข้าร่วม Meeting</title>
-     <link rel="icon" type="image/png" sizes="16x16" href="icon.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icon.png">
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -38,6 +38,13 @@
         tr:hover {
             background-color: #f1f1f1; /* เปลี่ยนสีเมื่อเมาส์ไปวางบนแถว */
         }
+        @keyframes blink {
+            0%, 100% { background-color: transparent; }
+            50% { background-color: yellow; }
+        }
+        .blink {
+            animation: blink 1s ease-in-out 3;
+        }
     </style>
 </head>
 <body>
@@ -55,6 +62,8 @@
         </tbody>
     </table>
     <script>
+        let previousData = [];
+
         async function fetchData() {
             const sheetId = '1Y8GV0_i3MmL_QKhoY8OscTvc8YUzdB-31KUiwGOXb5s'; // แทนที่ด้วย Sheet ID ของคุณ
             const sheetName = 'รายชื่อผู้เข้าประชุม'; // แทนที่ด้วยชื่อ Sheet ของคุณ
@@ -63,18 +72,38 @@
             const data = await response.text();
             const rows = data.split('\n').slice(1); // เอา header ออก
             const tableBody = document.querySelector('#data-table tbody');
-            tableBody.innerHTML = ''; // ล้างข้อมูลเก่า
-            rows.forEach((row) => {
-                const columns = row.split(',').map(column => column.replace(/"/g, '')); // ลบเครื่องหมาย "
+
+            // เรียงลำดับข้อมูลใหม่ให้รายชื่อล่าสุดอยู่บนสุด
+            rows.reverse();
+
+            // ตรวจสอบว่ามีรายชื่อใหม่หรือไม่
+            const newData = rows.map(row => row.split(',').map(column => column.replace(/"/g, '')));
+            const newEntries = newData.filter(row => !previousData.some(prevRow => prevRow.join() === row.join()));
+
+            // อัปเดตข้อมูลเก่า
+            previousData = newData;
+
+            // ล้างข้อมูลเก่า
+            tableBody.innerHTML = '';
+
+            // เพิ่มข้อมูลใหม่
+            newData.forEach((row, index) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${columns[1] || ''}</td> <!-- คอลัมน์ B: Name -->
-                    <td>${columns[2] || ''}</td> <!-- คอลัมน์ C: ตำแหน่ง -->
-                    <td>${columns[3] || ''}</td> <!-- คอลัมน์ D: กลุ่มงาน -->
+                    <td>${row[1] || ''}</td> <!-- คอลัมน์ B: Name -->
+                    <td>${row[2] || ''}</td> <!-- คอลัมน์ C: ตำแหน่ง -->
+                    <td>${row[3] || ''}</td> <!-- คอลัมน์ D: กลุ่มงาน -->
                 `;
                 tableBody.appendChild(tr);
+
+                // ตรวจสอบว่าเป็นรายชื่อใหม่หรือไม่
+                if (newEntries.some(entry => entry.join() === row.join())) {
+                    tr.classList.add('blink');
+                    setTimeout(() => tr.classList.remove('blink'), 3000); // หยุดการกระพริบหลังจาก 3 วินาที
+                }
             });
         }
+
         // อัปเดตข้อมูลทุก 5 นาที
         setInterval(fetchData, 3000);
         // ดึงข้อมูลครั้งแรกเมื่อโหลดหน้า
